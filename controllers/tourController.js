@@ -16,7 +16,7 @@ exports.checkId = (req, res, next, val) => {
   //     message: "Invalid ID",
   //   });
   // }
-   next();
+  next();
 };
 
 exports.checkBody = (req, res, next) => {
@@ -30,21 +30,6 @@ exports.checkBody = (req, res, next) => {
 };
 
 //Functions
-
-// const testTourDoc = new Tour({
-//   name: "The Park Camper",
-//   //rating: 4.7,
-//   price: 997,
-// });
-
-// testTourDoc
-//   .save()
-//   .then((doc) => {
-//     console.log(doc);
-//   })
-//   .catch((err) => {
-//     console.log(`Error : ${err}`);
-//   });
 
 exports.createTour = async (req, res) => {
   try {
@@ -101,46 +86,41 @@ exports.getTour = async (req, res) => {
   }
 };
 
-exports.updateTour = (req, res) => {
-  var body = req.body;
-  console.log(body);
-  var params = req.params;
-  var id = 1 * params["id"];
+exports.updateTour = async (req, res) => {
+  try {
+    const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-  var tour = tours.find((t) => t.id == id);
-
-  if (!tour) {
+    res.status(200).json({
+      status: "success",
+      data: {
+        updatedTour,
+      },
+    });
+  } catch (err) {
+    console.log(err);
     return res.status(404).json({
       status: "fail",
-      message: "Invalid ID",
+      message: err,
     });
   }
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      message: "<Updated tour here...>",
-    },
-  });
 };
 
-exports.deleteTour = (req, res) => {
-  var params = req.params;
-  var id = 1 * params["id"];
-
-  var tour = tours.find((t) => t.id == id);
-
-  if (!tour) {
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: "success",
+      data: {
+        message: "<Deleted tour here...>",
+      },
+    });
+  } catch (err) {
     return res.status(404).json({
       status: "fail",
       message: "Invalid ID",
     });
   }
-
-  res.status(204).json({
-    status: "success",
-    data: {
-      message: "<Deleted tour here...>",
-    },
-  });
 };
