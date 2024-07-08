@@ -11,9 +11,13 @@ router.param("id", controller.checkId);
 //If not , send back 400 (bad request)
 // Add it to the post handler stack
 
-router.route("/")
-.get(controller.getAllTours)
-.post(controller.checkBody,controller.createTour);
+router.route("/top-5-cheap")
+.get(controller.aliasTopTours,controller.getAllTours);
+
+router
+  .route("/")
+  .get(controller.getAllTours)
+  .post(controller.checkBody, controller.createTour);
 
 router
   .route("/:id")
