@@ -1,8 +1,9 @@
 const express = require("express");
-const controller = require("./../controllers/tourController");
+const tourController = require("./../controllers/tourController");
+const authController = require("./../controllers/authController");
 const router = express.Router();
 
-router.param("id", controller.checkId);
+router.param("id", tourController.checkId);
 
 //As Task
 
@@ -11,18 +12,19 @@ router.param("id", controller.checkId);
 //If not , send back 400 (bad request)
 // Add it to the post handler stack
 
-router.route("/top-5-cheap")
-.get(controller.aliasTopTours,controller.getAllTours);
+router
+  .route("/top-5-cheap")
+  .get(tourController.aliasTopTours, tourController.getAllTours);
 
 router
   .route("/")
-  .get(controller.getAllTours)
-  .post(controller.checkBody, controller.createTour);
+  .get(authController.protect, tourController.getAllTours)
+  .post(tourController.checkBody, tourController.createTour);
 
 router
   .route("/:id")
-  .get(controller.getTour)
-  .patch(controller.updateTour)
-  .delete(controller.deleteTour);
+  .get(tourController.getTour)
+  .patch(tourController.updateTour)
+  .delete(tourController.deleteTour);
 
 module.exports = router;
