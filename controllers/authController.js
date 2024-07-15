@@ -2,6 +2,7 @@ const User = require("./../models/userModel");
 const catchAsync = require("./../utils/catchAsync");
 const jwt = require("jsonwebtoken");
 const AppError = require("./../utils/appError");
+const { promisify } = require("util");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -15,6 +16,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    passwordChangedAt: req.body.passwordChangedAt,
   });
 
   //const token = signToken(newUser.id);
@@ -54,7 +56,7 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.protect = (req, res, next) => {
+exports.protect = async (req, res, next) => {
   // 1) Getting token and check it's there
   let token;
   if (
@@ -63,9 +65,6 @@ exports.protect = (req, res, next) => {
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
-
-  // 2)Verification Token  ------------------ will continue
-
   if (!token) {
     return next(
       new AppError("You are not logged in! PLease log in to get access"),
@@ -73,9 +72,28 @@ exports.protect = (req, res, next) => {
     );
   }
 
-  // 3)Check if user still exists
-
-  // 4)Check if user changed password after token was issued
-
+  // 2)Verification Token  ------------------ will continue
+let currentUser;
+  try {
+    // 3)Check if user still exists
+    // 4)Check if user changed password after token was issued
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    currentUser = await User.findById(decoded.id);
+    console.log(decoded);
+    if (!currentUser) {
+      return next(
+        new AppError("The token belonging to this user does not longer exist",401)
+      );
+    }
+    console.log("Time Stamps");
+    req.user = currentUser;
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      return next(
+        new AppError("User recently changed password! Please log in again!",401)
+      );
+    }
+  } catch (err) {
+    return next(new AppError("Invalid token,Please log in again!"), 401);
+  }
   next();
 };
